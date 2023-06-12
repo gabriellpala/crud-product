@@ -1,0 +1,93 @@
+package model.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import model.ModelException;
+import model.Product;
+import model.User;
+
+public class MySQLProductDAO implements ProductDAO {
+
+    @Override
+    public boolean save(Product product) throws ModelException {
+        DBHandler db = new DBHandler();
+
+        String sqlInsert = "INSERT INTO products (name, description, price, user_id) VALUES (?, ?, ?, ?);";
+
+        db.prepareStatement(sqlInsert);
+        db.setString(1, product.getName());
+        db.setString(2, product.getDescription());
+        db.setDouble(3, product.getPrice());
+        db.setInt(4, product.getUser().getId());
+
+        return db.executeUpdate() > 0;
+    }
+
+    @Override
+    public boolean update(Product product) throws ModelException {
+        DBHandler db = new DBHandler();
+
+        String sqlUpdate = "UPDATE products SET name = ?, description = ?, price = ?, user_id = ? WHERE id = ?;";
+
+        db.prepareStatement(sqlUpdate);
+
+        db.setString(1, product.getName());
+        db.setString(2, product.getDescription());
+        db.setDouble(3, product.getPrice());
+        db.setInt(4, product.getUser().getId());
+        db.setInt(5, product.getId());
+
+        return db.executeUpdate() > 0;
+    }
+
+    @Override
+    public boolean delete(Product product) throws ModelException {
+        DBHandler db = new DBHandler();
+
+        String sqlDelete = "DELETE FROM products WHERE id = ?;";
+
+        db.prepareStatement(sqlDelete);
+        db.setInt(1, product.getId());
+
+        return db.executeUpdate() > 0;
+    }
+
+    @Override
+    public List<Product> listAll() throws ModelException {
+        DBHandler db = new DBHandler();
+
+        List<Product> products = new ArrayList<>();
+
+        String sqlQuery = "SELECT * FROM products;";
+
+        db.createStatement();
+
+        db.executeQuery(sqlQuery);
+
+        while (db.next()) {
+            Product p = createProduct(db);
+            products.add(p);
+        }
+
+        return products;
+    }
+
+    @Override
+    public Product findById(int id) throws ModelException {
+        DBHandler db = new DBHandler();
+        Product product = null;
+    
+        String sqlQuery = "SELECT * FROM products WHERE id = ?;";
+    
+        db.prepareStatement(sqlQuery);
+        db.setInt(1, id);
+        db.executeQuery();
+    
+        if (db.next()) {
+            product = createProduct(db);
+        }
+    
+        return product;
+    }
+}
